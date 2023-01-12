@@ -24,6 +24,7 @@ class _MyHomePageState extends State<MyHomePage> {
       const AccountPage(),
       const FilePage(),
       const QueryPage(),
+      const MonitoredPathsPage(),
     ];
 
     _pageController = PageController(initialPage: _selectedPageIndex);
@@ -55,6 +56,8 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.search),
             label: 'Query',
           ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.create_new_folder), label: 'Paths'),
         ],
         selectedItemColor: Theme.of(context).colorScheme.onSecondary,
         unselectedItemColor: Theme.of(context).colorScheme.onTertiary,

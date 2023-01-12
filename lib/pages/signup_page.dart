@@ -27,6 +27,7 @@ class _SignupPageState extends State<SignupPage> {
       final AuthResponse res = await supabase.auth.signUp(
         email: _emailController.text,
         password: _passwordController.text,
+        emailRedirectTo: 'https://www.google.com/',
       );
       // ignore: unused_local_variable
       final Session? session = res.session;
@@ -35,6 +36,7 @@ class _SignupPageState extends State<SignupPage> {
       if (mounted) {
         _passwordController.clear();
         _emailController.clear();
+        Navigator.pop(context);
       }
     } on AuthException catch (error) {
       context.showErrorSnackBar(message: error.message);

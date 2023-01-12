@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scantrack/pages/snackbar_page.dart';
 import 'package:scantrack/shared/loading_animation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> determinePath(context) async {
   await Future.delayed(const Duration(seconds: 2));
