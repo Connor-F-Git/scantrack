@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scantrack/data_tables/paginated_table.dart';
+import 'package:scantrack/pages/snackbar_page.dart';
 
 class FilePage extends StatefulWidget {
   const FilePage({super.key});
@@ -16,6 +17,17 @@ class _FilePageState extends State<FilePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return PageTable();
+    return Center(
+      child: Column(
+        children: const [
+          Text(
+            "File Information You Uploaded",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 30.0),
+          ),
+          Expanded(child: PageTable()),
+        ],
+      ),
+    );
   }
 }

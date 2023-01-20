@@ -3,25 +3,51 @@ import 'package:scantrack/pages/snackbar_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupaBaseHandler {
-  addData(String filename, DateTime createdAt, DateTime lastUpdated,
-      String location, String uploader, context) async {
+  addData(String filename, String createdAt, String lastUpdated,
+      String? uploader, context) async {
     try {
       await Supabase.instance.client.from('files').upsert({
         'filename': filename,
         'created_at': createdAt,
         'last_updated': lastUpdated,
-        'location': location,
         'uploader': uploader,
         'user_id': supabase.auth.currentUser?.id
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Uploaded the File(s)'),
-      ));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Error saving task'),
         backgroundColor: Colors.red,
       ));
+    }
+  }
+
+  Future<List?> checkFiles(
+    context,
+    List<String> paths,
+  ) async {
+    try {
+      String fullCompare = r"";
+      for (String path in paths) {
+        fullCompare += "$path,";
+      }
+
+      // remove the ending comma
+      fullCompare = fullCompare.substring(0, fullCompare.length - 1);
+
+      //print(fullCompare);
+      var response = await supabase
+          .from("files")
+          .select("filename") //"filename, user_id")
+          .eq("user_id", supabase.auth.currentUser!.id)
+          .filter('filename', 'in', "($fullCompare)");
+      final dataList = response;
+      return dataList;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Error occured while getting Data'),
+        backgroundColor: Colors.red,
+      ));
+      return null;
     }
   }
 
@@ -39,9 +65,9 @@ class SupaBaseHandler {
     }
   }
 
-  Future<List?> readUserFileCount(context) async {
+  Future<int> readUserFileCount(context) async {
     try {
-      var response = await supabase.from('files').select('*');
+      var response = await supabase.from('files').select('COUNT(*)');
       final dataList = response;
       return dataList;
     } catch (e) {
@@ -49,7 +75,7 @@ class SupaBaseHandler {
         content: Text('Error occured while getting Data'),
         backgroundColor: Colors.red,
       ));
-      return null;
+      return 0;
     }
   }
 

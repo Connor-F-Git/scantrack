@@ -126,6 +126,12 @@ class _AccountPageState extends State<AccountPage>
             children: [const Text('Last Login: '), Text(lastSignIn.toString())],
           ),
           const Padding(padding: EdgeInsets.all(10.0)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [Text('User ID: '), Text(currentUser.id)],
+          ),
+          const Padding(padding: EdgeInsets.all(10.0)),
           TextButton(onPressed: _signOut, child: const Text('Sign Out'))
         ],
       );
