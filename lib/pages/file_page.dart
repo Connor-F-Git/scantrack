@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:scantrack/data_tables/paginated_table.dart';
-import 'package:scantrack/pages/snackbar_page.dart';
 
 class FilePage extends StatefulWidget {
   const FilePage({super.key});

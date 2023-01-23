@@ -65,6 +65,27 @@ class SupaBaseHandler {
     }
   }
 
+  Future<List?> queryDb(context, Map<String, dynamic> queryFilters) async {
+    try {
+      String textFilter = queryFilters['text'];
+      String afterDate = queryFilters['after'];
+      String beforeDate = queryFilters['before'];
+      var response = await supabase
+          .from('files')
+          .select('*')
+          .textSearch('filename', "'$textFilter'", config: 'english')
+          .gte('created_at', afterDate);
+      final dataList = response;
+      return dataList;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Error occured while getting Data'),
+        backgroundColor: Colors.red,
+      ));
+      return null;
+    }
+  }
+
   Future<int> readUserFileCount(context) async {
     try {
       var response = await supabase.from('files').select('COUNT(*)');

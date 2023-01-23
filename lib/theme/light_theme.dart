@@ -13,7 +13,7 @@ ThemeData getLightTheme() {
           onPrimary: Color.fromARGB(255, 255, 255, 255),
           onSecondary: Color.fromARGB(255, 14, 117, 4),
           onTertiary: Color.fromARGB(255, 93, 194, 93),
-          onSurface: Colors.greenAccent,
+          onSurface: Color.fromARGB(255, 34, 107, 44),
           // Primary, Secondary, Surface
           primary: Colors.green,
           secondary: Colors.lightGreen,

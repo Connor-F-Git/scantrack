@@ -36,7 +36,7 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
       if (nullCheckList == null) {
         _paths = [];
       } else {
-        for (var element in nullCheckList) {
+        for (String element in nullCheckList) {
           _paths.add(element);
           _selected[element] = false;
         }
@@ -166,7 +166,7 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
               Icon(Icons.refresh),
-              Text(' Check selected folder for missing files?')
+              Text(' Check selected folder(s) for missing files?')
             ],
           ));
     } else {
