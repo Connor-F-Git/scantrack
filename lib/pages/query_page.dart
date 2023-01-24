@@ -32,8 +32,8 @@ class _QueryPageState extends State<QueryPage>
         lastDate: DateTime.now());
     if (picked != null) {
       setState(() {
-        control.text =
-            picked.toString(); // TODO: parse date into month/day/year
+        control.text = DateFormat("MM/dd/yyyy")
+            .format(picked); // TODO: parse date into month/day/year
       });
     }
   }
@@ -178,7 +178,9 @@ class _QueryPageState extends State<QueryPage>
           ),
           const Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
           ElevatedButton(
-              onPressed: () => queryDb(), child: const Text("Search")),
+              onPressed: () => _queryDb(_textSearchController.text,
+                  _createdAfterController.text, _createdBeforeController.text),
+              child: const Text("Search")),
           const Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
           ElevatedButton(
               onPressed: () => setState(() {
@@ -192,7 +194,7 @@ class _QueryPageState extends State<QueryPage>
     );
   }
 
-  Future<void> queryDb() async {
+  Future<void> _queryDb(String text, String after, String before) async {
     if (_formKey.currentState!.validate()) {
       // If the form is valid, display a snackbar. In the real world,
       // you'd often call a server or save the information in a database.
@@ -202,9 +204,9 @@ class _QueryPageState extends State<QueryPage>
 
       // TEST TODO: Change to real data
       Map<String, dynamic> queryFilters = {
-        'text': "test",
-        "after": "1/5/2023",
-        "before": "1/18/2023"
+        'text': text,
+        "after": after,
+        "before": before
       };
 
       if (mounted) {

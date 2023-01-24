@@ -27,6 +27,7 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
   Map<String, bool> _selected = {};
   SupaBaseHandler handler = SupaBaseHandler();
   bool _loading = false;
+  bool _selectAll = false;
 
   @override
   void initState() {
@@ -55,6 +56,17 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
         child: Stack(children: [
           Column(
             children: [
+              const Padding(padding: EdgeInsets.fromLTRB(0, 5, 0, 5)),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Select All: "),
+                  Checkbox(
+                      value: _selectAll,
+                      onChanged: (value) => selectAll(value!)),
+                ],
+              ),
               const Padding(padding: EdgeInsets.fromLTRB(0, 5, 0, 5)),
               Expanded(
                 child: ListView.separated(
@@ -121,6 +133,13 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
     }
   }
 
+  void selectAll(bool isChecked) {
+    _selected.updateAll((key, value) => isChecked);
+    setState(() {
+      _selectAll = isChecked;
+    });
+  }
+
   Widget loadingCheck() {
     if (_loading) {
       return AbsorbPointer(
@@ -144,6 +163,7 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
       if (value == null) {
         // User canceled the picker
       } else if (value.length > 4) {
+        _selected[value.toString()] = false;
         _paths.add(value.toString());
         prefs.setStringList('paths', _paths);
       }

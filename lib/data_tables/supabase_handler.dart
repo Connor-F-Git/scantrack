@@ -53,7 +53,10 @@ class SupaBaseHandler {
 
   Future<List?> readData(context) async {
     try {
-      var response = await supabase.from('files').select('*');
+      var response = await supabase
+          .from('files')
+          .select()
+          .eq('user_id', supabase.auth.currentUser!.id);
       final dataList = response;
       return dataList;
     } catch (e) {
@@ -74,7 +77,8 @@ class SupaBaseHandler {
           .from('files')
           .select('*')
           .textSearch('filename', "'$textFilter'", config: 'english')
-          .gte('created_at', afterDate);
+          .gte('created_at', afterDate)
+          .lte('created_at', beforeDate);
       final dataList = response;
       return dataList;
     } catch (e) {
