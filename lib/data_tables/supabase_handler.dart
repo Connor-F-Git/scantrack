@@ -3,6 +3,7 @@ import 'package:scantrack/pages/snackbar_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupaBaseHandler {
+  String userID = supabase.auth.currentUser!.id;
   addData(String filename, String createdAt, String lastUpdated,
       String? uploader, context) async {
     try {
@@ -11,7 +12,7 @@ class SupaBaseHandler {
         'created_at': createdAt,
         'last_updated': lastUpdated,
         'uploader': uploader,
-        'user_id': supabase.auth.currentUser?.id
+        'user_id': userID
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -38,7 +39,7 @@ class SupaBaseHandler {
       var response = await supabase
           .from("files")
           .select("filename") //"filename, user_id")
-          .eq("user_id", supabase.auth.currentUser!.id)
+          .eq("user_id", userID)
           .filter('filename', 'in', "($fullCompare)");
       final dataList = response;
       return dataList;
@@ -53,10 +54,8 @@ class SupaBaseHandler {
 
   Future<List?> readData(context) async {
     try {
-      var response = await supabase
-          .from('files')
-          .select()
-          .eq('user_id', supabase.auth.currentUser!.id);
+      var response =
+          await supabase.from('files').select().eq('user_id', userID);
       final dataList = response;
       return dataList;
     } catch (e) {
@@ -75,10 +74,14 @@ class SupaBaseHandler {
       String beforeDate = queryFilters['before'];
       var response = await supabase
           .from('files')
-          .select('*')
-          .textSearch('filename', "'$textFilter'", config: 'english')
-          .gte('created_at', afterDate)
-          .lte('created_at', beforeDate);
+          .select()
+          .eq('user_id', userID)
+          .like('filename', '%$textFilter%')
+          .gte('created_at', afterDate.isNotEmpty ? afterDate : '01/01/1970')
+          .lte('created_at', beforeDate.isNotEmpty ? beforeDate : '12/31/2222');
+
+      //.gte('created_at', '') //afterDate)
+      //.lte('created_at', ''); //beforeDate);
       final dataList = response;
       return dataList;
     } catch (e) {

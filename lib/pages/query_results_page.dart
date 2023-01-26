@@ -1,5 +1,6 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:scantrack/shared/loading_animation.dart';
 
 class QueryResults extends StatefulWidget {
@@ -19,6 +20,8 @@ class _QueryResultsState extends State<QueryResults> {
   int _sortColumnIndex = 0;
   bool _sortAscending = true;
 
+  DateFormat readableFormat = DateFormat('MM-dd-yyyy');
+
   Widget isTableEmpty() {
     if (cols.isNotEmpty) {
       return DataTable2(
@@ -26,17 +29,19 @@ class _QueryResultsState extends State<QueryResults> {
           sortColumnIndex: _sortColumnIndex,
           columns: cols,
           rows: rows);
+    } else if (cols.toString() == '[]') {
+      return const Text(
+        "There are no results that match your query.",
+        style: TextStyle(fontSize: 20),
+      );
     } else {
-      return LoadAnimation();
+      return const LoadAnimation();
     }
   }
 
-  @override
-  void initState() {
-    print("QUERY INFO BELOW:");
-    print(widget.queryInfo.toString());
-    if (widget.queryInfo != null) {
-      for (var key in widget.queryInfo!.first.keys) {
+  void buildTableInfo(List<dynamic> data) {
+    if (data.isNotEmpty) {
+      for (var key in data.first.keys) {
         cols.add(DataColumn2(
           label: Text(key.toString()),
           onSort: (columnIndex, ascending) {
@@ -58,14 +63,35 @@ class _QueryResultsState extends State<QueryResults> {
           },
         ));
       }
-      for (var row in widget.queryInfo!) {
+      for (var row in data) {
         List<DataCell> curRow = [];
         for (var cell in row.values) {
-          curRow.add(DataCell(Text(cell.toString())));
+          bool isCreatedAt = (row.keys.firstWhere((k) => row[k] == cell,
+                  orElse: (() => cell.toString()))) ==
+              'created_at';
+          bool isLastUpdated = (row.keys.firstWhere((k) => row[k] == cell,
+                  orElse: (() => cell.toString()))) ==
+              'last_updated';
+          if (isCreatedAt || isLastUpdated) {
+            // null check
+            String nullCheckedDate = cell != null
+                ? readableFormat.format(DateTime.parse(cell.toString()))
+                : 'null';
+            curRow.add(DataCell(
+                // convert the long date format into a readable date format
+                Text(nullCheckedDate)));
+          } else {
+            curRow.add(DataCell(Text(cell.toString())));
+          }
         }
         rows.add(DataRow2(cells: curRow));
       }
     }
+  }
+
+  @override
+  void initState() {
+    buildTableInfo(widget.queryInfo!);
     super.initState();
   }
 

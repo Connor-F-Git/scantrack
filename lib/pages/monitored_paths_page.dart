@@ -61,7 +61,7 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Select All: "),
+                  const Text("Select All: "),
                   Checkbox(
                       value: _selectAll,
                       onChanged: (value) => selectAll(value!)),

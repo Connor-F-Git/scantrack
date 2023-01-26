@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:scantrack/pages/snackbar_page.dart';
 import 'package:scantrack/shared/loading_animation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -19,6 +20,7 @@ class _AccountPageState extends State<AccountPage>
   final _fileCountController = TextEditingController();
 
   bool _loading = false;
+  late SharedPreferences _prefs;
 
   /// Called once a user id is received within `onAuthenticated()`
   Future<void> _getProfile() async {
@@ -74,7 +76,7 @@ class _AccountPageState extends State<AccountPage>
   Widget build(BuildContext context) {
     super.build(context);
     final currentUser = supabase.auth.currentUser;
-    final lastSign = supabase.auth.currentUser?.lastSignInAt;
+    final lastSign = supabase.auth.currentUser?.updatedAt;
     final lastSignIn = DateFormat('M/d/y hh:mm aaa')
         .format(DateTime.parse(lastSign!).toLocal());
     if (currentUser != null) {
@@ -93,13 +95,7 @@ class _AccountPageState extends State<AccountPage>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [const Text('Last Login: '), Text(lastSignIn.toString())],
-          ),
-          const Padding(padding: EdgeInsets.all(10.0)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [const Text('User ID: '), Text(currentUser.id)],
+            children: [const Text('Last Login: '), Text(lastSignIn)],
           ),
           const Padding(padding: EdgeInsets.all(10.0)),
           Row(
