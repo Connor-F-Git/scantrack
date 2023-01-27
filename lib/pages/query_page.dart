@@ -90,6 +90,7 @@ class _QueryPageState extends State<QueryPage>
           autovalidateMode: AutovalidateMode.onUserInteraction,
           key: _formKey,
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
               Row(

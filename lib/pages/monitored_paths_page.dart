@@ -23,8 +23,7 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
   List<String> _paths = [];
   late SharedPreferences _prefs;
   bool _initialized = false;
-  // ignore: prefer_final_fields
-  Map<String, bool> _selected = {};
+  final Map<String, bool> _selected = {};
   SupaBaseHandler handler = SupaBaseHandler();
   bool _loading = false;
   bool _selectAll = false;

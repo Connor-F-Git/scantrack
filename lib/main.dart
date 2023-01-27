@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'ScanTrack',
+      title: 'TPI Scan Tracking',
       theme: getLightTheme(),
       initialRoute: '/splash',
       routes: {

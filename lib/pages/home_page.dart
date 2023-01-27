@@ -72,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ),
       appBar: AppBar(
-        title: const Text('TPI File Tracker'),
+        title: const Text('TPI Scan Tracker'),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),

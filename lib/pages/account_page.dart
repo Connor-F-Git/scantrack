@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scantrack/pages/snackbar_page.dart';
 import 'package:scantrack/shared/loading_animation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -20,7 +19,6 @@ class _AccountPageState extends State<AccountPage>
   final _fileCountController = TextEditingController();
 
   bool _loading = false;
-  late SharedPreferences _prefs;
 
   /// Called once a user id is received within `onAuthenticated()`
   Future<void> _getProfile() async {
@@ -80,32 +78,35 @@ class _AccountPageState extends State<AccountPage>
     final lastSignIn = DateFormat('M/d/y hh:mm aaa')
         .format(DateTime.parse(lastSign!).toLocal());
     if (currentUser != null) {
-      return ListView(
-        children: [
-          const Padding(padding: EdgeInsets.all(10.0)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text('Email: '),
-              Text(currentUser.email.toString())
-            ],
-          ),
-          const Padding(padding: EdgeInsets.all(10.0)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [const Text('Last Login: '), Text(lastSignIn)],
-          ),
-          const Padding(padding: EdgeInsets.all(10.0)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [const Text('# of Files in DB: '), countText()],
-          ),
-          const Padding(padding: EdgeInsets.all(10.0)),
-          TextButton(onPressed: _signOut, child: const Text('Sign Out'))
-        ],
+      return Center(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            const Padding(padding: EdgeInsets.all(10.0)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text('Email: '),
+                Text(currentUser.email.toString())
+              ],
+            ),
+            const Padding(padding: EdgeInsets.all(10.0)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [const Text('Last Login: '), Text(lastSignIn)],
+            ),
+            const Padding(padding: EdgeInsets.all(10.0)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [const Text('# of Files in DB: '), countText()],
+            ),
+            const Padding(padding: EdgeInsets.all(10.0)),
+            TextButton(onPressed: _signOut, child: const Text('Sign Out'))
+          ],
+        ),
       );
     } else {
       return const LoadAnimation();

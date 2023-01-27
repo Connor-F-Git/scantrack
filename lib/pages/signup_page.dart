@@ -15,7 +15,7 @@ class _SignupPageState extends State<SignupPage> {
   bool _redirecting = false;
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
-  // ignore: unused_field
+
   late final StreamSubscription<AuthState> _authStateSubscription;
 
   Future<void> _signUp() async {
@@ -27,7 +27,7 @@ class _SignupPageState extends State<SignupPage> {
       final AuthResponse res = await supabase.auth.signUp(
         email: _emailController.text,
         password: _passwordController.text,
-        emailRedirectTo: 'https://www.google.com/',
+        emailRedirectTo: 'https://theprecisionists.com/',
       );
       // ignore: unused_local_variable
       final Session? session = res.session;
