@@ -54,8 +54,10 @@ class SupaBaseHandler {
 
   Future<List?> readData(context) async {
     try {
-      var response =
-          await supabase.from('files').select().eq('user_id', userID);
+      var response = await supabase
+          .from('files')
+          .select('filename, created_at, last_updated, uploader')
+          .eq('user_id', userID);
       final dataList = response;
       return dataList;
     } catch (e) {
@@ -70,18 +72,18 @@ class SupaBaseHandler {
   Future<List?> queryDb(context, Map<String, dynamic> queryFilters) async {
     try {
       String textFilter = queryFilters['text'];
+      textFilter =
+          textFilter.replaceAllMapped(RegExp(r"(\(|\))"), (match) => "~");
       String afterDate = queryFilters['after'];
       String beforeDate = queryFilters['before'];
       var response = await supabase
           .from('files')
-          .select()
+          .select('filename, created_at, last_updated, uploader')
           .eq('user_id', userID)
           .like('filename', '%$textFilter%')
           .gte('created_at', afterDate.isNotEmpty ? afterDate : '01/01/1970')
           .lte('created_at', beforeDate.isNotEmpty ? beforeDate : '12/31/2222');
 
-      //.gte('created_at', '') //afterDate)
-      //.lte('created_at', ''); //beforeDate);
       final dataList = response;
       return dataList;
     } catch (e) {

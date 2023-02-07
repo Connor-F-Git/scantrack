@@ -45,20 +45,27 @@ class _QueryResultsState extends State<QueryResults> {
         cols.add(DataColumn2(
           label: Text(key.toString()),
           onSort: (columnIndex, ascending) {
+            rows.sort(((a, b) {
+              dynamic aValue;
+              dynamic bValue;
+              if ((key == 'created_at') || (key == 'last_updated')) {
+                String aChild = a.cells[columnIndex].child.toString();
+                String bChild = b.cells[columnIndex].child.toString();
+                aChild = aChild.substring(4, aChild.length - 1);
+                bChild = bChild.substring(4, bChild.length - 1);
+                aValue = DateFormat('M-d-y').parse(aChild);
+                bValue = DateFormat('M-d-y').parse(bChild);
+              } else {
+                aValue = a.cells[columnIndex].child.toString();
+                bValue = b.cells[columnIndex].child.toString();
+              }
+              return _sortAscending
+                  ? Comparable.compare(aValue, bValue)
+                  : Comparable.compare(bValue, aValue);
+            }));
             setState(() {
               _sortColumnIndex = columnIndex;
               _sortAscending = !_sortAscending;
-              rows.sort(((a, b) {
-                if (!_sortAscending) {
-                  return a.cells[columnIndex].child
-                      .toString()
-                      .compareTo(b.cells[columnIndex].child.toString());
-                } else {
-                  return b.cells[columnIndex].child
-                      .toString()
-                      .compareTo(a.cells[columnIndex].child.toString());
-                }
-              }));
             });
           },
         ));
@@ -84,7 +91,7 @@ class _QueryResultsState extends State<QueryResults> {
             curRow.add(DataCell(Text(cell.toString())));
           }
         }
-        rows.add(DataRow2(cells: curRow));
+        rows.add(DataRow2(cells: curRow, specificRowHeight: 100));
       }
     }
   }

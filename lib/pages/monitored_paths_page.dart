@@ -80,9 +80,13 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
                                   _selected[_paths[index]] = value!;
                                 });
                               }),
-                          Text(
-                            _paths[index],
-                            textAlign: TextAlign.center,
+                          Flexible(
+                            flex: 1,
+                            fit: FlexFit.tight,
+                            child: Text(
+                              _paths[index],
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                           TextButton(
                               onPressed: () {
@@ -209,41 +213,60 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
     List<String> filesParsed = [];
     for (var key in _selected.keys) {
       if (_selected[key] == true) {
-        List files = io.Directory(key).listSync(recursive: true);
-        for (var i in files) {
-          if (i.toString().startsWith('File')) {
-            String path = i.toString();
-            int lastInd = path.lastIndexOf(RegExp(r'\\[^\\]+\\[^\\]+$'));
-            // replace all parentheses with a tilde
-            path = path.replaceAllMapped(RegExp(r"(\(|\))"), (match) => "~");
-            filesParsed.add(path.substring(lastInd, path.length - 1));
+        if (io.Directory(key).existsSync()) {
+          List files = io.Directory(key).listSync(recursive: true);
+          for (var i in files) {
+            // for each file path in file path list
+            if (i.toString().startsWith('File')) {
+              // if
+              String path = i.toString();
+              // find the index of where to splice the string
+              int lastInd = path.lastIndexOf(RegExp(
+                  r"\\((d|D)esktop|(d|D)ocuments|(d|D)ownloads)\\[\S|\W]+$"));
+              // replace all parentheses with a tilde
+              path = path.replaceAllMapped(RegExp(r"(\(|\))"), (match) => "~");
+              path = path.replaceAllMapped(
+                  RegExp(r"\\((d|D)esktop|(d|D)ocuments|(d|D)ownloads)"),
+                  (match) => "");
+              filesParsed.add(path.substring(lastInd, path.length - 1));
+            }
           }
-        }
-      }
-    }
-    await handler.checkFiles(context, filesParsed).then((value) async {
-      // if query completes and returns data
-      if (value != null || value != []) {
-        // the differences represent the files in the paths that aren't in the database.
-        List<String> returnedFilenames = [];
-        for (var element in value!) {
-          returnedFilenames.add(element['filename']);
-        }
-        List<String> differences =
-            filesParsed.where((i) => !returnedFilenames.contains(i)).toList();
-        if (differences.isNotEmpty) {
-          await uploadData(differences, context);
-        } else if (differences.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-              'No new file information to upload.',
-              style: TextStyle(color: Colors.black),
+              "The path, $key, does not exist on this device.",
+              style: const TextStyle(color: Colors.black),
             ),
-            backgroundColor: Colors.amber,
+            backgroundColor: Colors.red,
           ));
         }
       }
-    });
+    }
+    if (filesParsed.isNotEmpty) {
+      await handler.checkFiles(context, filesParsed).then((value) async {
+        // if query completes and returns data
+        if (value != null || value != []) {
+          // the differences represent the files in the paths that aren't in the database.
+          List<String> returnedFilenames = [];
+          for (var element in value!) {
+            returnedFilenames.add(element['filename']);
+          }
+          List<String> differences =
+              filesParsed.where((i) => !returnedFilenames.contains(i)).toList();
+          if (differences.isNotEmpty) {
+            await uploadData(differences, context);
+          } else if (differences.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                'No new file information to upload.',
+                style: TextStyle(color: Colors.black),
+              ),
+              backgroundColor: Colors.amber,
+            ));
+          }
+        }
+      });
+    }
     _loading = false;
   }
 }

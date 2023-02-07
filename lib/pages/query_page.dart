@@ -33,7 +33,7 @@ class _QueryPageState extends State<QueryPage>
       BuildContext context, TextEditingController control) async {
     final DateTime? picked = await showDatePicker(
         context: context,
-        initialDate: DateTime.now().subtract(const Duration(days: 1)),
+        initialDate: DateTime.now(),
         firstDate: DateTime(2021),
         lastDate: DateTime.now());
     if (picked != null) {
@@ -98,7 +98,7 @@ class _QueryPageState extends State<QueryPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.1,
+                    width: MediaQuery.of(context).size.width * 0.15,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
@@ -107,7 +107,7 @@ class _QueryPageState extends State<QueryPage>
                     ),
                   ),
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.2,
+                    width: MediaQuery.of(context).size.width * 0.33,
                     child: TextFormField(
                       controller: _textSearchController,
                       maxLength: 256,
@@ -126,7 +126,7 @@ class _QueryPageState extends State<QueryPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.1,
+                      width: MediaQuery.of(context).size.width * 0.2,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
@@ -135,7 +135,7 @@ class _QueryPageState extends State<QueryPage>
                       ),
                     ),
                     SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.2,
+                      width: MediaQuery.of(context).size.width * 0.28,
                       child: TextFormField(
                         readOnly: true,
                         validator: (value) {
@@ -177,7 +177,7 @@ class _QueryPageState extends State<QueryPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.1,
+                    width: MediaQuery.of(context).size.width * 0.2,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
@@ -186,7 +186,7 @@ class _QueryPageState extends State<QueryPage>
                     ),
                   ),
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.2,
+                    width: MediaQuery.of(context).size.width * 0.28,
                     child: TextFormField(
                       readOnly: true,
                       textAlign: TextAlign.center,

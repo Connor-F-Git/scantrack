@@ -45,6 +45,21 @@ class _AccountPageState extends State<AccountPage>
     });
   }
 
+  void fileCountRefresh() async {
+    final newCount = await supabase
+        .from('files')
+        .select(
+          'id',
+          const FetchOptions(
+            count: CountOption.exact,
+          ),
+        )
+        .eq('user_id', supabase.auth.currentUser!.id);
+    setState(() {
+      _fileCountController.text = newCount.count.toString();
+    });
+  }
+
   Future<void> _signOut() async {
     try {
       await supabase.auth.signOut();
@@ -74,9 +89,12 @@ class _AccountPageState extends State<AccountPage>
   Widget build(BuildContext context) {
     super.build(context);
     final currentUser = supabase.auth.currentUser;
-    final lastSign = supabase.auth.currentUser?.updatedAt;
-    final lastSignIn = DateFormat('M/d/y hh:mm aaa')
-        .format(DateTime.parse(lastSign!).toLocal());
+    final lastSign =
+        currentUser != null ? supabase.auth.currentUser?.updatedAt : '';
+    final lastSignIn = lastSign!.isNotEmpty
+        ? DateFormat('M/d/y hh:mm aaa')
+            .format(DateTime.parse(lastSign).toLocal())
+        : 'Error';
     if (currentUser != null) {
       return Center(
         child: ListView(
@@ -101,7 +119,15 @@ class _AccountPageState extends State<AccountPage>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [const Text('# of Files in DB: '), countText()],
+              children: [
+                const Text('# of Files in DB: '),
+                countText(),
+                const Padding(padding: EdgeInsets.symmetric(horizontal: 8)),
+                ElevatedButton(
+                  onPressed: fileCountRefresh,
+                  child: const Icon(Icons.refresh),
+                )
+              ],
             ),
             const Padding(padding: EdgeInsets.all(10.0)),
             TextButton(onPressed: _signOut, child: const Text('Sign Out'))

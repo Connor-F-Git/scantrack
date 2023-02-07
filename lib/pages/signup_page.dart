@@ -36,6 +36,13 @@ class _SignupPageState extends State<SignupPage> {
       if (mounted) {
         _passwordController.clear();
         _emailController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+            'Check your email to confirm account',
+            style: TextStyle(color: Colors.black),
+          ),
+          backgroundColor: Colors.amber,
+        ));
         Navigator.pop(context);
       }
     } on AuthException catch (error) {

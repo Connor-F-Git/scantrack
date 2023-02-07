@@ -45,6 +45,7 @@ class _FilePageState extends State<FilePage>
       );
     } else {
       return PaginatedDataTable2(
+          autoRowsToHeight: true,
           sortArrowIcon: Icons.arrow_downward,
           sortAscending: _sortAscending,
           sortColumnIndex: _sortColumnIndex,
@@ -79,12 +80,9 @@ class _FilePageState extends State<FilePage>
     return _supaBaseHandler.readData(context);
   }
 
-  void sort<T>(
-    Comparable<T> Function(String d) getField,
-    int columnIndex,
-    bool ascending,
-  ) {
-    _paginatedSource.sort<T>(getField, ascending, columnIndex);
+  void sort<T>(Comparable<T> Function(String d) getField, int columnIndex,
+      bool ascending, String columnKey) {
+    _paginatedSource.sort<T>(getField, ascending, columnIndex, columnKey);
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
@@ -95,11 +93,21 @@ class _FilePageState extends State<FilePage>
     if (data!.isNotEmpty) {
       // Populate Columns
       for (var key in data[0].keys) {
-        _dataColumns.add(DataColumn2(
-          label: Text(key.toString()),
-          onSort: (columnIndex, ascending) =>
-              sort<String>((d) => d, columnIndex, ascending),
-        ));
+        if ((key.toString() == "created_at") ||
+            (key.toString() == "last_updated")) {
+          _dataColumns.add(DataColumn2(
+            fixedWidth: 170,
+            label: Text(key.toString()),
+            onSort: (columnIndex, ascending) =>
+                sort<String>((d) => d, columnIndex, ascending, key),
+          ));
+        } else {
+          _dataColumns.add(DataColumn2(
+            label: Text(key.toString()),
+            onSort: (columnIndex, ascending) =>
+                sort<String>((d) => d, columnIndex, ascending, key),
+          ));
+        }
       }
 
       // Populate Rows
@@ -118,17 +126,16 @@ class _FilePageState extends State<FilePage>
             curRow.add(DataCell(
                 Text(DateFormat("MM/dd/yyyy").format(DateTime.parse(val)))));
           } else {
-            curRow.add(DataCell(Text(parsedVal)));
+            curRow.add((DataCell(Text(parsedVal))));
           }
         }
-        _dataRows.add(DataRow2(cells: curRow));
+        _dataRows.add(DataRow2(
+            cells: curRow,
+            specificRowHeight: MediaQuery.of(context).size.height * 0.12));
       }
 
       // assign data rows to table source
       _paginatedSource = PaginatedSource(_dataRows);
-      print(_paginatedSource.dataRows.first.cells.length.toString());
-      print("columns");
-      print(_dataColumns);
       setState(() {
         isNoFiles = false;
         _loading = false;
@@ -145,8 +152,14 @@ class _FilePageState extends State<FilePage>
   void initState() {
     _loading = true;
     getTableData().then((data) {
-      dataHandler(data);
-      isNoFiles = false;
+      if (data!.isNotEmpty) {
+        dataHandler(data);
+        isNoFiles = false;
+      } else {
+        setState(() {
+          isNoFiles = true;
+        });
+      }
     });
     super.initState();
   }
@@ -173,10 +186,21 @@ class PaginatedSource extends DataTableSource {
   PaginatedSource(this.dataRows);
 
   void sort<T>(Comparable<T> Function(String d) getField, bool ascending,
-      int sortColumnIndex) {
+      int sortColumnIndex, String columnKey) {
     dataRows.sort((a, b) {
-      final aValue = a.cells[sortColumnIndex].child.toString();
-      final bValue = b.cells[sortColumnIndex].child.toString();
+      dynamic aValue;
+      dynamic bValue;
+      if ((columnKey == 'created_at') || (columnKey == 'last_updated')) {
+        String aChild = a.cells[sortColumnIndex].child.toString();
+        String bChild = b.cells[sortColumnIndex].child.toString();
+        aChild = aChild.substring(4, aChild.length - 1);
+        bChild = bChild.substring(4, bChild.length - 1);
+        aValue = DateFormat('M/d/y').parse(aChild);
+        bValue = DateFormat('M/d/y').parse(bChild);
+      } else {
+        aValue = a.cells[sortColumnIndex].child.toString();
+        bValue = b.cells[sortColumnIndex].child.toString();
+      }
       return ascending
           ? Comparable.compare(aValue, bValue)
           : Comparable.compare(bValue, aValue);
