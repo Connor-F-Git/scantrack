@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:scantrack/pages/pages.dart';
 import 'package:scantrack/theme/light_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'keys.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  //ProjectKeys constants = ProjectKeys();
 
   await Supabase.initialize(
-    url: 'https://tbausrsfiefpjlzkmfbk.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6'
-        'InRiYXVzcnNmaWVmcGpsemttZmJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzI3NTc5N'
-        'DUsImV4cCI6MTk4ODMzMzk0NX0.Sw4IzrzQhHERkjOABHiXUp7joke_vQzlIZXWqCFiL8Y',
+    url: ProjectKeys.dbUrl,
+    anonKey: ProjectKeys.anonKey,
   );
   runApp(const MyApp());
 }
