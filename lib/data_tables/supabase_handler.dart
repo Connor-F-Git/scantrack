@@ -3,17 +3,12 @@ import 'package:scantrack/pages/snackbar_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupaBaseHandler {
-  String userID = supabase.auth.currentUser!.id;
-  addData(String filename, String createdAt, String lastUpdated,
-      String? uploader, context) async {
+  String userId = supabase.auth.currentUser!.id;
+  String? userEmail = supabase.auth.currentUser?.email;
+  addData(List<String> dataFiles, context) async {
     try {
-      await Supabase.instance.client.from('files').upsert({
-        'filename': filename,
-        'created_at': createdAt,
-        'last_updated': lastUpdated,
-        'uploader': uploader,
-        'user_id': userID
-      });
+      await supabase.rpc('add_files',
+          params: {'userfiles': dataFiles, 'upl': userEmail, 'uid': userId});
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Error saving task'),
@@ -27,20 +22,10 @@ class SupaBaseHandler {
     List<String> paths,
   ) async {
     try {
-      String fullCompare = r"";
-      for (String path in paths) {
-        fullCompare += "$path,";
-      }
+      // response = all files on both the 'paths' list and db
+      var response =
+          await supabase.rpc('get_check_files', params: {'userfiles': paths});
 
-      // remove the ending comma
-      fullCompare = fullCompare.substring(0, fullCompare.length - 1);
-
-      //print(fullCompare);
-      var response = await supabase
-          .from("files")
-          .select("filename") //"filename, user_id")
-          .eq("user_id", userID)
-          .filter('filename', 'in', "($fullCompare)");
       final dataList = response;
       return dataList;
     } catch (e) {
@@ -57,7 +42,7 @@ class SupaBaseHandler {
       var response = await supabase
           .from('files')
           .select('filename, created_at, last_updated, uploader')
-          .eq('user_id', userID);
+          .eq('user_id', userId);
       final dataList = response;
       return dataList;
     } catch (e) {
@@ -79,7 +64,7 @@ class SupaBaseHandler {
       var response = await supabase
           .from('files')
           .select('filename, created_at, last_updated, uploader')
-          .eq('user_id', userID)
+          .eq('user_id', userId)
           .like('filename', '%$textFilter%')
           .gte('created_at', afterDate.isNotEmpty ? afterDate : '01/01/1970')
           .lte('created_at', beforeDate.isNotEmpty ? beforeDate : '12/31/2222');

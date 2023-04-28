@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:scantrack/data_tables/supabase_handler.dart';
-import 'package:scantrack/pages/snackbar_page.dart';
 import 'package:scantrack/shared/loading_animation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
@@ -90,11 +89,12 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
                           ),
                           TextButton(
                               onPressed: () {
-                                removePath(
-                                  _prefs,
-                                  _paths[index],
-                                );
-                                setState(() {});
+                                setState(() {
+                                  removePath(
+                                    _prefs,
+                                    _paths[index],
+                                  );
+                                });
                               },
                               child: const Text(
                                 '- Remove Path',
@@ -198,25 +198,35 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
   }
 
   Future<void> uploadData(List<String> dataList, BuildContext context) async {
-    for (String path in dataList) {
-      handler.addData(path, DateTime.now().toString(),
-          DateTime.now().toString(), supabase.auth.currentUser?.email, context);
+    try {
+      handler.addData(dataList, context);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Uploaded the File(s)'),
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Error adding data'),
+        backgroundColor: Colors.red,
+      ));
     }
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Uploaded the File(s)'),
-    ));
-    _selected.clear();
   }
 
+  // when file check button is pressed
   Future<void> onCheckPress(BuildContext context) async {
-    _loading = true;
-    List<String> filesParsed = [];
+    setState(() {
+      _loading = true;
+    });
+    List<String> filesParsed = []; // list of files after their names get fixed
     for (var key in _selected.keys) {
+      // for each path
       if (_selected[key] == true) {
+        // if path is selected
         if (io.Directory(key).existsSync()) {
+          // if the path exists
+          // files = all the file names in the directory
           List files = io.Directory(key).listSync(recursive: true);
           for (var i in files) {
-            // for each file path in file path list
+            // for each filename
             if (i.toString().startsWith('File')) {
               // if
               String path = i.toString();
@@ -244,13 +254,14 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
     }
     if (filesParsed.isNotEmpty) {
       await handler.checkFiles(context, filesParsed).then((value) async {
-        // if query completes and returns data
-        if (value != null || value != []) {
-          // the differences represent the files in the paths that aren't in the database.
+        if (value != null) {
+          // returnedFilenames = all the duplicate files that don't need to go into the db
           List<String> returnedFilenames = [];
-          for (var element in value!) {
+          for (var element in value) {
             returnedFilenames.add(element['filename']);
           }
+
+          // differences = all the files that SHOULD go into the db
           List<String> differences =
               filesParsed.where((i) => !returnedFilenames.contains(i)).toList();
           if (differences.isNotEmpty) {
@@ -267,6 +278,8 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
         }
       });
     }
-    _loading = false;
+    setState(() {
+      _loading = false;
+    });
   }
 }

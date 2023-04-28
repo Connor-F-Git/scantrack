@@ -65,11 +65,12 @@ msix_config:
   display_name: TPI Scan Tracking
   publisher_display_name: The Precisionists, Inc.
   identity_name: com.theprecisionists.connorf
-  msix_version: 1.0.0.1
+  msix_version: 1.0.0.3
   logo_path: C:\Users\cfeda\Downloads\tpi_icon.png
   capabilities: internetClient
   debug: false
   output_name: TPI_Scan_Tracking
+  output_path: C:\Users\cfeda\Desktop
 
 # The following section is specific to Flutter packages.
 flutter:
