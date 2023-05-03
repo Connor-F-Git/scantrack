@@ -199,10 +199,21 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
 
   Future<void> uploadData(List<String> dataList, BuildContext context) async {
     try {
-      handler.addData(dataList, context);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Uploaded the File(s)'),
-      ));
+      await handler.addData(dataList, context).then((response) {
+        if (response > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Uploaded the File(s) Information'),
+          ));
+        } else if (response == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+              'No new file information to upload.',
+              style: TextStyle(color: Colors.black),
+            ),
+            backgroundColor: Colors.amber,
+          ));
+        }
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Error adding data'),
@@ -253,30 +264,7 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
       }
     }
     if (filesParsed.isNotEmpty) {
-      await handler.checkFiles(context, filesParsed).then((value) async {
-        if (value != null) {
-          // returnedFilenames = all the duplicate files that don't need to go into the db
-          List<String> returnedFilenames = [];
-          for (var element in value) {
-            returnedFilenames.add(element['filename']);
-          }
-
-          // differences = all the files that SHOULD go into the db
-          List<String> differences =
-              filesParsed.where((i) => !returnedFilenames.contains(i)).toList();
-          if (differences.isNotEmpty) {
-            await uploadData(differences, context);
-          } else if (differences.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text(
-                'No new file information to upload.',
-                style: TextStyle(color: Colors.black),
-              ),
-              backgroundColor: Colors.amber,
-            ));
-          }
-        }
-      });
+      await uploadData(filesParsed, context);
     }
     setState(() {
       _loading = false;

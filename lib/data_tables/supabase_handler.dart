@@ -7,8 +7,9 @@ class SupaBaseHandler {
   String? userEmail = supabase.auth.currentUser?.email;
   addData(List<String> dataFiles, context) async {
     try {
-      await supabase.rpc('add_files',
+      final int response = await supabase.rpc('add_file_information',
           params: {'userfiles': dataFiles, 'upl': userEmail, 'uid': userId});
+      return response;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Error saving task'),
