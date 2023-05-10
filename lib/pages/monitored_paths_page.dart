@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:scantrack/data_tables/supabase_handler.dart';
 import 'package:scantrack/shared/loading_animation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -197,7 +198,7 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
     }
   }
 
-  Future<void> uploadData(List<String> dataList, BuildContext context) async {
+  Future<void> uploadData(List<dynamic> dataList, BuildContext context) async {
     try {
       await handler.addData(dataList, context).then((response) {
         if (response > 0) {
@@ -227,7 +228,8 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
     setState(() {
       _loading = true;
     });
-    List<String> filesParsed = []; // list of files after their names get fixed
+    List<dynamic> filesParsed =
+        []; // list of files and created date after their names get fixed
     for (var key in _selected.keys) {
       // for each path
       if (_selected[key] == true) {
@@ -236,6 +238,8 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
           // if the path exists
           // files = all the file names in the directory
           List files = io.Directory(key).listSync(recursive: true);
+          String offset =
+              DateTime.now().timeZoneOffset.inHours.abs().toString();
           for (var i in files) {
             // for each filename
             if (i.toString().startsWith('File')) {
@@ -249,7 +253,15 @@ class _MonitoredPathsPageState extends State<MonitoredPathsPage>
               path = path.replaceAllMapped(
                   RegExp(r"\\((d|D)esktop|(d|D)ocuments|(d|D)ownloads)"),
                   (match) => "");
-              filesParsed.add(path.substring(lastInd, path.length - 1));
+              path = path.replaceAllMapped(RegExp(r"(\\)+"), (match) => "/");
+
+              var tempObj = {
+                "filename": path.substring(lastInd, path.length - 1),
+                "created_at": DateFormat('yyyy-MM-dd HH:mm:ss-0$offset')
+                    .format(i.statSync().changed)
+                    .toString()
+              };
+              filesParsed.add(tempObj);
             }
           }
         } else {

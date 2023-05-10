@@ -5,10 +5,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SupaBaseHandler {
   String userId = supabase.auth.currentUser!.id;
   String? userEmail = supabase.auth.currentUser?.email;
-  addData(List<String> dataFiles, context) async {
+  addData(List<dynamic> dataFiles, context) async {
     try {
-      final int response = await supabase.rpc('add_file_information',
-          params: {'userfiles': dataFiles, 'upl': userEmail, 'uid': userId});
+      final int response = await supabase.rpc('insert_objects', params: {
+        'objects': toJson(dataFiles),
+        'uid': userId,
+        'useremail': userEmail
+      });
       return response;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
