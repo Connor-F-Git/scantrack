@@ -93,8 +93,7 @@ class _FilePageState extends State<FilePage>
     if (data!.isNotEmpty) {
       // Populate Columns
       for (var key in data[0].keys) {
-        if ((key.toString() == "created_at") ||
-            (key.toString() == "last_updated")) {
+        if (key.toString() == "created_at") {
           _dataColumns.add(DataColumn2(
             fixedWidth: 170,
             label: Text(key.toString()),
@@ -119,10 +118,7 @@ class _FilePageState extends State<FilePage>
           bool isCreatedAt = (row.keys.firstWhere((k) => row[k] == val,
                   orElse: (() => val.toString()))) ==
               'created_at';
-          bool isLastUpdated = (row.keys.firstWhere((k) => row[k] == val,
-                  orElse: (() => val.toString()))) ==
-              'last_updated';
-          if ((isCreatedAt || isLastUpdated) && (val != null)) {
+          if ((isCreatedAt) && (val != null)) {
             curRow.add(DataCell(
                 Text(DateFormat("MM/dd/yyyy").format(DateTime.parse(val)))));
           } else {
@@ -154,7 +150,9 @@ class _FilePageState extends State<FilePage>
     getTableData().then((data) {
       if (data!.isNotEmpty) {
         dataHandler(data);
-        isNoFiles = false;
+        setState(() {
+          isNoFiles = false;
+        });
       } else {
         setState(() {
           isNoFiles = true;
@@ -190,7 +188,7 @@ class PaginatedSource extends DataTableSource {
     dataRows.sort((a, b) {
       dynamic aValue;
       dynamic bValue;
-      if ((columnKey == 'created_at') || (columnKey == 'last_updated')) {
+      if (columnKey == 'created_at') {
         String aChild = a.cells[sortColumnIndex].child.toString();
         String bChild = b.cells[sortColumnIndex].child.toString();
         aChild = aChild.substring(4, aChild.length - 1);

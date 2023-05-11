@@ -45,7 +45,7 @@ class SupaBaseHandler {
     try {
       var response = await supabase
           .from('files')
-          .select('filename, created_at, last_updated, uploader')
+          .select('filename, created_at, uploader')
           .eq('user_id', userId);
       final dataList = response;
       return dataList;
@@ -67,9 +67,9 @@ class SupaBaseHandler {
       String beforeDate = queryFilters['before'];
       var response = await supabase
           .from('files')
-          .select('filename, created_at, last_updated, uploader')
+          .select('filename, created_at, uploader')
           .eq('user_id', userId)
-          .like('filename', '%$textFilter%')
+          .ilike('filename', '%$textFilter%')
           .gte('created_at', afterDate.isNotEmpty ? afterDate : '01/01/1970')
           .lte('created_at', beforeDate.isNotEmpty ? beforeDate : '12/31/2222');
 
