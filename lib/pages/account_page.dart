@@ -16,50 +16,6 @@ class _AccountPageState extends State<AccountPage>
   @override
   bool get wantKeepAlive => true;
 
-  final _fileCountController = TextEditingController();
-
-  bool _loading = false;
-
-  /// Called once a user id is received within `onAuthenticated()`
-  Future<void> _getProfile() async {
-    setState(() {
-      _loading = true;
-    });
-
-    if (mounted && supabase.auth.currentUser != null) {
-      final userId = supabase.auth.currentUser!.id;
-      final countData = await supabase
-          .from('files')
-          .select(
-            'id',
-            const FetchOptions(
-              count: CountOption.exact,
-            ),
-          )
-          .eq('user_id', userId);
-      _fileCountController.text = countData.count.toString();
-    }
-
-    setState(() {
-      _loading = false;
-    });
-  }
-
-  void fileCountRefresh() async {
-    final newCount = await supabase
-        .from('files')
-        .select(
-          'id',
-          const FetchOptions(
-            count: CountOption.exact,
-          ),
-        )
-        .eq('user_id', supabase.auth.currentUser!.id);
-    setState(() {
-      _fileCountController.text = newCount.count.toString();
-    });
-  }
-
   Future<void> _signOut() async {
     try {
       await supabase.auth.signOut();
@@ -71,18 +27,6 @@ class _AccountPageState extends State<AccountPage>
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/login');
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _getProfile();
-  }
-
-  @override
-  void dispose() {
-    _fileCountController.dispose();
-    super.dispose();
   }
 
   @override
@@ -116,36 +60,12 @@ class _AccountPageState extends State<AccountPage>
               children: [const Text('Last Login: '), Text(lastSignIn)],
             ),
             const Padding(padding: EdgeInsets.all(10.0)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Text('# of Files in DB: '),
-                countText(),
-                const Padding(padding: EdgeInsets.symmetric(horizontal: 8)),
-                ElevatedButton(
-                  onPressed: fileCountRefresh,
-                  child: const Icon(Icons.refresh),
-                )
-              ],
-            ),
-            const Padding(padding: EdgeInsets.all(10.0)),
             TextButton(onPressed: _signOut, child: const Text('Sign Out'))
           ],
         ),
       );
     } else {
       return const LoadAnimation();
-    }
-  }
-
-  Widget countText() {
-    if (_loading) {
-      return const Text('Loading...');
-    } else {
-      return Text(_fileCountController.text.isEmpty
-          ? 'No Files in DB'
-          : _fileCountController.text);
     }
   }
 }

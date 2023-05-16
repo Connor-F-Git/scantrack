@@ -1,68 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:scantrack/pages/snackbar_page.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupaBaseHandler {
-  String userID = supabase.auth.currentUser!.id;
-  addData(String filename, String createdAt, String lastUpdated,
-      String? uploader, context) async {
+  Future<List?> getEmails(context) async {
     try {
-      await Supabase.instance.client.from('files').upsert({
-        'filename': filename,
-        'created_at': createdAt,
-        'last_updated': lastUpdated,
-        'uploader': uploader,
-        'user_id': userID
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Error saving task'),
-        backgroundColor: Colors.red,
-      ));
-    }
-  }
-
-  Future<List?> checkFiles(
-    context,
-    List<String> paths,
-  ) async {
-    try {
-      String fullCompare = r"";
-      for (String path in paths) {
-        fullCompare += "$path,";
-      }
-
-      // remove the ending comma
-      fullCompare = fullCompare.substring(0, fullCompare.length - 1);
-
-      //print(fullCompare);
-      var response = await supabase
-          .from("files")
-          .select("filename") //"filename, user_id")
-          .eq("user_id", userID)
-          .filter('filename', 'in', "($fullCompare)");
+      var response = await supabase.rpc('get_email_list');
       final dataList = response;
       return dataList;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Error occured while getting Data'),
-        backgroundColor: Colors.red,
-      ));
-      return null;
-    }
-  }
-
-  Future<List?> readData(context) async {
-    try {
-      var response = await supabase
-          .from('files')
-          .select('filename, created_at, last_updated, uploader')
-          .eq('user_id', userID);
-      final dataList = response;
-      return dataList;
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Error occured while getting Data'),
+        content: Text('Error occured while getting List of Users'),
         backgroundColor: Colors.red,
       ));
       return null;
@@ -76,17 +23,34 @@ class SupaBaseHandler {
           textFilter.replaceAllMapped(RegExp(r"(\(|\))"), (match) => "~");
       String afterDate = queryFilters['after'];
       String beforeDate = queryFilters['before'];
-      var response = await supabase
-          .from('files')
-          .select('filename, created_at, last_updated, uploader')
-          .eq('user_id', userID)
-          .like('filename', '%$textFilter%')
-          .gte('created_at', afterDate.isNotEmpty ? afterDate : '01/01/1970')
-          .lte('created_at', beforeDate.isNotEmpty ? beforeDate : '12/31/2222');
-
+      // TODO: MASSIVE OVERHAUL OF THIS FUNCTION
+      //       create function in supabase that accepts the following parameters:
+      //       1. an array of text that could possibly be empty
+      //       2. text that may be empty
+      //       3. first date that must be earlier than the second
+      //       4. second date that must be later than the first
+      // var response = await supabase
+      //     .from('files')
+      //     .select('filename, created_at, uploader')
+      //     .eq(
+      //         'user_id',
+      //         supabase.auth.currentUser!.id
+      //             .toString()) // TODO: edit this to accept multiple users
+      //     .ilike('filename', '%$textFilter%')
+      //     .gte('created_at', afterDate.isNotEmpty ? afterDate : '01/01/1970')
+      //     .lte('created_at', beforeDate.isNotEmpty ? beforeDate : '12/31/2222');
+      var response = await supabase.rpc('search_files', params: {
+        'uploaders': queryFilters['uploaders'],
+        'searchtext': textFilter,
+        'afterdate': afterDate.isNotEmpty ? afterDate : '01/01/1970',
+        'beforedate': beforeDate.isNotEmpty ? beforeDate : '12/31/2222'
+      });
+      print("RESPONSE");
+      print(response.toString());
       final dataList = response;
       return dataList;
     } catch (e) {
+      print(e.toString());
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Error occured while getting Data'),
         backgroundColor: Colors.red,
@@ -95,9 +59,11 @@ class SupaBaseHandler {
     }
   }
 
-  Future<int> readUserFileCount(context) async {
+  Future<Map<String, int>?> readUsersFileCount(
+      context, DateTime start, DateTime end) async {
     try {
-      var response = await supabase.from('files').select('COUNT(*)');
+      var response = await supabase.rpc('get_file_counts_by_user',
+          params: {'start_date': start, 'end_date': end});
       final dataList = response;
       return dataList;
     } catch (e) {
@@ -105,17 +71,7 @@ class SupaBaseHandler {
         content: Text('Error occured while getting Data'),
         backgroundColor: Colors.red,
       ));
-      return 0;
     }
-  }
-
-  updateData(int id, bool statusval) async {
-    await Supabase.instance.client
-        .from('files')
-        .upsert({'id': id, 'uploader': statusval});
-  }
-
-  deleteData(int id) async {
-    await Supabase.instance.client.from('files').delete().match({'id': id});
+    return null;
   }
 }

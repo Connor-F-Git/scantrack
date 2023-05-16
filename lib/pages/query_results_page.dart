@@ -2,6 +2,7 @@ import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:scantrack/shared/loading_animation.dart';
+import 'package:scantrack/shared/paginated_source.dart';
 
 class QueryResults extends StatefulWidget {
   const QueryResults({super.key, required this.queryInfo});
@@ -14,21 +15,33 @@ class QueryResults extends StatefulWidget {
 
 class _QueryResultsState extends State<QueryResults> {
   List<DataColumn2> cols = [];
-
   List<DataRow2> rows = [];
+  late PaginatedSource _paginatedSource;
 
   int _sortColumnIndex = 0;
   bool _sortAscending = true;
 
   DateFormat readableFormat = DateFormat('MM-dd-yyyy');
 
-  Widget isTableEmpty() {
-    if (cols.isNotEmpty) {
-      return DataTable2(
+  bool _loading = false;
+
+  Widget determineLoading() {
+    if (!_loading) {
+      return PaginatedDataTable2(
+          autoRowsToHeight: true,
+          sortArrowIcon: Icons.arrow_downward,
           sortAscending: _sortAscending,
           sortColumnIndex: _sortColumnIndex,
           columns: cols,
-          rows: rows);
+          source: _paginatedSource);
+    } else {
+      return const LoadAnimation();
+    }
+  }
+
+  Widget isTableEmpty() {
+    if (widget.queryInfo != null && widget.queryInfo!.isNotEmpty) {
+      return determineLoading();
     } else if (cols.toString() == '[]') {
       return const Text(
         "There are no results that match your query.",
@@ -39,35 +52,22 @@ class _QueryResultsState extends State<QueryResults> {
     }
   }
 
-  void buildTableInfo(List<dynamic> data) {
-    if (data.isNotEmpty) {
+  void sort<T>(Comparable<T> Function(String d) getField, int columnIndex,
+      bool ascending, String columnKey) {
+    _paginatedSource.sort<T>(getField, ascending, columnIndex, columnKey);
+    setState(() {
+      _sortColumnIndex = columnIndex;
+      _sortAscending = ascending;
+    });
+  }
+
+  void buildTableInfo(List<dynamic>? data) {
+    if (data != null && data.isNotEmpty) {
       for (var key in data.first.keys) {
         cols.add(DataColumn2(
           label: Text(key.toString()),
-          onSort: (columnIndex, ascending) {
-            rows.sort(((a, b) {
-              dynamic aValue;
-              dynamic bValue;
-              if ((key == 'created_at') || (key == 'last_updated')) {
-                String aChild = a.cells[columnIndex].child.toString();
-                String bChild = b.cells[columnIndex].child.toString();
-                aChild = aChild.substring(4, aChild.length - 1);
-                bChild = bChild.substring(4, bChild.length - 1);
-                aValue = DateFormat('M-d-y').parse(aChild);
-                bValue = DateFormat('M-d-y').parse(bChild);
-              } else {
-                aValue = a.cells[columnIndex].child.toString();
-                bValue = b.cells[columnIndex].child.toString();
-              }
-              return _sortAscending
-                  ? Comparable.compare(aValue, bValue)
-                  : Comparable.compare(bValue, aValue);
-            }));
-            setState(() {
-              _sortColumnIndex = columnIndex;
-              _sortAscending = !_sortAscending;
-            });
-          },
+          onSort: (columnIndex, ascending) =>
+              sort<String>((d) => d, columnIndex, ascending, key),
         ));
       }
       for (var row in data) {
@@ -76,10 +76,7 @@ class _QueryResultsState extends State<QueryResults> {
           bool isCreatedAt = (row.keys.firstWhere((k) => row[k] == cell,
                   orElse: (() => cell.toString()))) ==
               'created_at';
-          bool isLastUpdated = (row.keys.firstWhere((k) => row[k] == cell,
-                  orElse: (() => cell.toString()))) ==
-              'last_updated';
-          if (isCreatedAt || isLastUpdated) {
+          if (isCreatedAt) {
             // null check
             String nullCheckedDate = cell != null
                 ? readableFormat.format(DateTime.parse(cell.toString()))
@@ -98,7 +95,15 @@ class _QueryResultsState extends State<QueryResults> {
 
   @override
   void initState() {
-    buildTableInfo(widget.queryInfo!);
+    print(widget.queryInfo.toString());
+    setState(() {
+      _loading = true;
+    });
+    _paginatedSource = PaginatedSource(rows);
+    buildTableInfo(widget.queryInfo);
+    setState(() {
+      _loading = false;
+    });
     super.initState();
   }
 

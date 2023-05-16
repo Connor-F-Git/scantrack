@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:scantrack/pages/file_page.dart';
 import 'pages.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -20,12 +19,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _selectedPageIndex = 0;
 
-    _pages = [
-      const AccountPage(),
-      const FilePage(),
-      const QueryPage(),
-      const MonitoredPathsPage(),
-    ];
+    _pages = [const AccountPage(), const QueryPage()];
 
     _pageController = PageController(initialPage: _selectedPageIndex);
   }
@@ -51,13 +45,10 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.person),
             label: 'Account',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.file_open), label: 'Files'),
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
             label: 'Query',
           ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.create_new_folder), label: 'Paths'),
         ],
         selectedItemColor: Theme.of(context).colorScheme.onSecondary,
         unselectedItemColor: Theme.of(context).colorScheme.onTertiary,
@@ -72,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ),
       appBar: AppBar(
-        title: const Text('TPI Scan Tracker'),
+        title: const Text('TPI Database Search'),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),

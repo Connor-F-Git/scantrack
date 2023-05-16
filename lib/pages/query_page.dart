@@ -21,13 +21,21 @@ class _QueryPageState extends State<QueryPage>
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _textSearchController;
+  late final TextEditingController _uploaderController;
   late final TextEditingController _createdAfterController;
   late final TextEditingController _createdBeforeController;
+  final List<DropdownMenuEntry<Object>> _dropMenuList = [];
+  String dropdownMenuLabel = "All";
+
   bool _loading = false;
   SupaBaseHandler handler = SupaBaseHandler();
   bool isAfterError = false;
   DateFormat readableFormat = DateFormat("MM-dd-yyyy");
   bool _isValid = true;
+  bool _uploaderLoading = false;
+  int _radioValue = 0;
+  final Map<int, bool> _checkMarkMap = {};
+  final Map<String, int> _emailIndexMap = {};
 
   Future<void> _selectDate(
       BuildContext context, TextEditingController control) async {
@@ -43,9 +51,83 @@ class _QueryPageState extends State<QueryPage>
     }
   }
 
+  Future<void> _getUploaderList() async {
+    setState(() {
+      _uploaderLoading = true;
+    });
+    dynamic emailReturn = await handler.getEmails(context);
+
+    for (int index = 0; index < emailReturn.length; index++) {
+      _checkMarkMap[index] = true;
+      String val = emailReturn[index]['uploader'].toString();
+      _emailIndexMap[val] = index;
+      _dropMenuList.add(DropdownMenuEntry(
+          //enabled: false,
+          style: TextButton.styleFrom(disabledForegroundColor: Colors.green),
+          value: val,
+          label: val,
+          trailingIcon: StatefulBuilder(
+              builder: (BuildContext context, StateSetter stateSetter) {
+            return Checkbox(
+                key: UniqueKey(),
+                value: _checkMarkMap[index],
+                onChanged: (bool? value) {
+                  stateSetter(() {
+                    _checkMarkMap[index] = value!;
+                  });
+                  setState(() {
+                    dropdownMenuLabel = _checkMarkMap.values
+                        .where((value) => value)
+                        .length
+                        .toString();
+                    _uploaderController.text =
+                        "Number of Users Selected: $dropdownMenuLabel";
+                  });
+                });
+          })));
+    }
+    setState(() {
+      _uploaderLoading = false;
+    });
+  }
+
+  Widget _uploaderLoadCheck() {
+    if (_uploaderLoading) {
+      return const Text("Loading...");
+    } else {
+      return DropdownMenu(
+          enableFilter: true,
+          label: _uploaderSelected(),
+          menuStyle: MenuStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(
+                  Theme.of(context).colorScheme.onPrimary)),
+          textStyle:
+              TextStyle(color: Theme.of(context).colorScheme.onBackground),
+          onSelected: (value) {
+            //1. get index of map, based on email string value
+            int valInd = _emailIndexMap[value] ?? -1;
+            // 2. set value of the corresponding key to the opposite of whatever it currently is
+
+            setState(() {
+              _checkMarkMap[valInd] = !_checkMarkMap[valInd]!;
+              dropdownMenuLabel = _checkMarkMap.values
+                  .where((value) => value)
+                  .length
+                  .toString();
+              _uploaderController.text =
+                  "Number of Users Selected: $dropdownMenuLabel";
+            });
+          },
+          width: MediaQuery.of(context).size.width * 0.3,
+          dropdownMenuEntries: _dropMenuList);
+    }
+  }
+
   @override
   void initState() {
+    _getUploaderList();
     _textSearchController = TextEditingController();
+    _uploaderController = TextEditingController();
     _createdAfterController = TextEditingController();
     _createdBeforeController = TextEditingController();
     super.initState();
@@ -54,6 +136,7 @@ class _QueryPageState extends State<QueryPage>
   @override
   void dispose() {
     _textSearchController.dispose();
+    _uploaderController.dispose();
     _createdAfterController.dispose();
     _createdBeforeController.dispose();
     super.dispose();
@@ -80,6 +163,10 @@ class _QueryPageState extends State<QueryPage>
     }
   }
 
+  Widget _uploaderSelected() {
+    return Text("Number of Users Selected: $dropdownMenuLabel");
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -99,9 +186,56 @@ class _QueryPageState extends State<QueryPage>
                 children: [
                   SizedBox(
                     width: MediaQuery.of(context).size.width * 0.15,
-                    child: Column(
+                    child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
+                        Text('Uploader: '),
+                      ],
+                    ),
+                  ),
+                  _uploaderLoadCheck(),
+                  TextButton(
+                      onPressed: () {
+                        _checkMarkMap.forEach((key, _) {
+                          setState(() {
+                            _checkMarkMap[key] = true;
+                            dropdownMenuLabel = _checkMarkMap.values
+                                .where((value) => value)
+                                .length
+                                .toString();
+                            _uploaderController.text =
+                                "Number of Users Selected: $dropdownMenuLabel";
+                          });
+                        });
+                      },
+                      child: const Text("Select All")),
+                  TextButton(
+                      onPressed: () {
+                        _checkMarkMap.forEach((key, _) {
+                          setState(() {
+                            _checkMarkMap[key] = false;
+                            dropdownMenuLabel = _checkMarkMap.values
+                                .where((value) => value)
+                                .length
+                                .toString();
+                            _uploaderController.text =
+                                "Number of Users Selected: $dropdownMenuLabel";
+                          });
+                        });
+                      },
+                      child: const Text("Deselect All"))
+                ],
+              ),
+              const Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.15,
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                         Text('Text in Filename: '),
                       ],
                     ),
@@ -127,9 +261,9 @@ class _QueryPageState extends State<QueryPage>
                   children: [
                     SizedBox(
                       width: MediaQuery.of(context).size.width * 0.2,
-                      child: Column(
+                      child: const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Text('Uploaded After: '),
                         ],
                       ),
@@ -178,9 +312,9 @@ class _QueryPageState extends State<QueryPage>
                 children: [
                   SizedBox(
                     width: MediaQuery.of(context).size.width * 0.2,
-                    child: Column(
+                    child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Text("Uploaded Before: "),
                       ],
                     ),
@@ -208,6 +342,36 @@ class _QueryPageState extends State<QueryPage>
                 ],
               ),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8.0)),
+              Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.2,
+                      child: RadioListTile(
+                          title: const Text("File Search"),
+                          value: 0,
+                          groupValue: _radioValue,
+                          onChanged: (value) {
+                            setState(() {
+                              _radioValue = value!;
+                            });
+                          }),
+                    ),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.2,
+                      child: RadioListTile(
+                          title: const Text("File Count"),
+                          value: 1,
+                          groupValue: _radioValue,
+                          onChanged: (value) {
+                            setState(() {
+                              _radioValue = value!;
+                            });
+                          }),
+                    ),
+                  ]),
+              const Padding(padding: EdgeInsets.symmetric(vertical: 8.0)),
               ElevatedButton(
                   onPressed: _isValid
                       ? () {
@@ -215,7 +379,8 @@ class _QueryPageState extends State<QueryPage>
                             _queryDb(
                                 _textSearchController.text,
                                 _createdAfterController.text,
-                                _createdBeforeController.text);
+                                _createdBeforeController.text,
+                                _uploaderController.text);
                           }
                         }
                       : null,
@@ -251,7 +416,8 @@ class _QueryPageState extends State<QueryPage>
     }
   }
 
-  Future<void> _queryDb(String text, String after, String before) async {
+  Future<void> _queryDb(
+      String text, String after, String before, String uploader) async {
     if (_formKey.currentState!.validate()) {
       // If the form is valid, display a snackbar. In the real world,
       // you'd often call a server or save the information in a database.
@@ -259,7 +425,22 @@ class _QueryPageState extends State<QueryPage>
         _loading = true;
       });
 
+      List<String> queryUsers = [];
+      _checkMarkMap.forEach((key, value) {
+        if (value == true) {
+          if (key < _dropMenuList.length) {
+            queryUsers.add(_dropMenuList[key].value.toString());
+          }
+        }
+      });
+
       Map<String, dynamic> queryFilters = {
+        'uploaders': queryUsers.isNotEmpty
+            ? queryUsers.toString().replaceFirst('[', '{').replaceFirstMapped(
+                RegExp(r'\]'),
+                (match) => '}',
+                queryUsers.toString().lastIndexOf(']'))
+            : '{}',
         'text': text.isNotEmpty ? text : '',
         "after": after.isNotEmpty ? after : '',
         "before": before.isNotEmpty ? before : ''
@@ -268,6 +449,8 @@ class _QueryPageState extends State<QueryPage>
       if (mounted) {
         var results = await handler.queryDb(context, queryFilters);
         if (mounted) {
+          print("RESULTS");
+          print(results.toString());
           Navigator.push(
               context,
               MaterialPageRoute(

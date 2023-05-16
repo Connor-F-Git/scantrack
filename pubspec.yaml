@@ -43,8 +43,12 @@ dependencies:
   injectable: ^2.1.0
 
   # Local Storage
-  file_picker: ^5.2.5
+  file_picker: ^5.2.5 
   shared_preferences: ^2.0.16
+
+  # Tags
+  material_tag_editor: ^0.1.2
+  dropdown_button2: ^2.1.2
 
 dev_dependencies:
   flutter_test:
@@ -62,14 +66,15 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 msix_config:
-  display_name: TPI Scan Tracking
+  display_name: TPI Database Search
   publisher_display_name: The Precisionists, Inc.
   identity_name: com.theprecisionists.connorf
-  msix_version: 1.0.0.1
+  msix_version: 1.0.0.3
   logo_path: C:\Users\cfeda\Downloads\tpi_icon.png
   capabilities: internetClient
   debug: false
   output_name: TPI_Scan_Tracking
+  output_path: C:\Users\cfeda\Desktop
 
 # The following section is specific to Flutter packages.
 flutter:
