@@ -5,6 +5,7 @@ import 'package:scantrack/pages/query_results_page.dart';
 import 'package:scantrack/data_tables/supabase_handler.dart';
 import 'package:intl/intl.dart';
 import 'package:scantrack/shared/loading_animation.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 
 class QueryPage extends StatefulWidget {
   const QueryPage({super.key});
@@ -24,7 +25,7 @@ class _QueryPageState extends State<QueryPage>
   late final TextEditingController _uploaderController;
   late final TextEditingController _createdAfterController;
   late final TextEditingController _createdBeforeController;
-  final List<DropdownMenuEntry<Object>> _dropMenuList = [];
+  final TextEditingController searchController = TextEditingController();
   String dropdownMenuLabel = "All";
 
   bool _loading = false;
@@ -34,8 +35,7 @@ class _QueryPageState extends State<QueryPage>
   bool _isValid = true;
   bool _uploaderLoading = false;
   int _radioValue = 0;
-  final Map<int, bool> _checkMarkMap = {};
-  final Map<String, int> _emailIndexMap = {};
+  Map<int, UploaderListItem> uploaderMap = {};
 
   Future<void> _selectDate(
       BuildContext context, TextEditingController control) async {
@@ -58,33 +58,8 @@ class _QueryPageState extends State<QueryPage>
     dynamic emailReturn = await handler.getEmails(context);
 
     for (int index = 0; index < emailReturn.length; index++) {
-      _checkMarkMap[index] = true;
       String val = emailReturn[index]['uploader'].toString();
-      _emailIndexMap[val] = index;
-      _dropMenuList.add(DropdownMenuEntry(
-          //enabled: false,
-          style: TextButton.styleFrom(disabledForegroundColor: Colors.green),
-          value: val,
-          label: val,
-          trailingIcon: StatefulBuilder(
-              builder: (BuildContext context, StateSetter stateSetter) {
-            return Checkbox(
-                key: UniqueKey(),
-                value: _checkMarkMap[index],
-                onChanged: (bool? value) {
-                  stateSetter(() {
-                    _checkMarkMap[index] = value!;
-                  });
-                  setState(() {
-                    dropdownMenuLabel = _checkMarkMap.values
-                        .where((value) => value)
-                        .length
-                        .toString();
-                    _uploaderController.text =
-                        "Number of Users Selected: $dropdownMenuLabel";
-                  });
-                });
-          })));
+      uploaderMap[index] = UploaderListItem(val, true);
     }
     setState(() {
       _uploaderLoading = false;
@@ -95,31 +70,95 @@ class _QueryPageState extends State<QueryPage>
     if (_uploaderLoading) {
       return const Text("Loading...");
     } else {
-      return DropdownMenu(
-          enableFilter: true,
-          label: _uploaderSelected(),
-          menuStyle: MenuStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(
-                  Theme.of(context).colorScheme.onPrimary)),
-          textStyle:
-              TextStyle(color: Theme.of(context).colorScheme.onBackground),
-          onSelected: (value) {
-            //1. get index of map, based on email string value
-            int valInd = _emailIndexMap[value] ?? -1;
-            // 2. set value of the corresponding key to the opposite of whatever it currently is
-
-            setState(() {
-              _checkMarkMap[valInd] = !_checkMarkMap[valInd]!;
-              dropdownMenuLabel = _checkMarkMap.values
-                  .where((value) => value)
-                  .length
-                  .toString();
-              _uploaderController.text =
-                  "Number of Users Selected: $dropdownMenuLabel";
-            });
-          },
-          width: MediaQuery.of(context).size.width * 0.3,
-          dropdownMenuEntries: _dropMenuList);
+      return SizedBox(
+        width: 243,
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton2(
+            focusNode: FocusNode(canRequestFocus: false),
+            dropdownSearchData: DropdownSearchData(
+              searchController: searchController,
+              searchInnerWidgetHeight: 50,
+              searchInnerWidget: Container(
+                height: 50,
+                padding: const EdgeInsets.only(
+                  top: 8,
+                  bottom: 4,
+                  right: 8,
+                  left: 8,
+                ),
+                child: TextFormField(
+                  expands: true,
+                  maxLines: null,
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    hintText: 'Search for a user...',
+                    hintStyle: const TextStyle(fontSize: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            onChanged: (value) {},
+            hint: Text("Number of Users Selected: $dropdownMenuLabel"),
+            items: uploaderMap.entries.map((item) {
+              String itemName = item.value.name;
+              return DropdownMenuItem<String>(
+                value: itemName,
+                //disable default onTap to avoid closing menu when selecting an item
+                enabled: false,
+                child: StatefulBuilder(
+                  builder: (context, menuSetState) {
+                    return InkWell(
+                      onTap: () {
+                        //This rebuilds the StatefulWidget to update the button's text
+                        setState(() {
+                          uploaderMap[item.key]!.isSelected =
+                              !item.value.isSelected;
+                          dropdownMenuLabel = uploaderMap.values
+                              .where((element) => element.isSelected)
+                              .length
+                              .toString();
+                          _uploaderController.text =
+                              "Number of Users Selected: $dropdownMenuLabel";
+                        });
+                        //This rebuilds the dropdownMenu Widget to update the check mark
+                        menuSetState(() {});
+                      },
+                      child: SizedBox(
+                        width: 243,
+                        child: Row(
+                          children: [
+                            item.value.isSelected
+                                ? const Icon(Icons.check_box_outlined)
+                                : const Icon(Icons.check_box_outline_blank),
+                            Expanded(
+                              child: Text(
+                                itemName,
+                                textWidthBasis: TextWidthBasis.parent,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      );
     }
   }
 
@@ -135,6 +174,7 @@ class _QueryPageState extends State<QueryPage>
 
   @override
   void dispose() {
+    searchController.dispose();
     _textSearchController.dispose();
     _uploaderController.dispose();
     _createdAfterController.dispose();
@@ -163,10 +203,6 @@ class _QueryPageState extends State<QueryPage>
     }
   }
 
-  Widget _uploaderSelected() {
-    return Text("Number of Users Selected: $dropdownMenuLabel");
-  }
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -184,23 +220,15 @@ class _QueryPageState extends State<QueryPage>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.15,
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Uploader: '),
-                      ],
-                    ),
-                  ),
-                  _uploaderLoadCheck(),
+                  const Flexible(child: Text('Uploader:')),
+                  SizedBox(height: 40, width: 300, child: _uploaderLoadCheck()),
                   TextButton(
                       onPressed: () {
-                        _checkMarkMap.forEach((key, _) {
+                        uploaderMap.forEach((key, value) {
                           setState(() {
-                            _checkMarkMap[key] = true;
-                            dropdownMenuLabel = _checkMarkMap.values
-                                .where((value) => value)
+                            value.isSelected = true;
+                            dropdownMenuLabel = uploaderMap.values
+                                .where((element) => element.isSelected)
                                 .length
                                 .toString();
                             _uploaderController.text =
@@ -211,11 +239,11 @@ class _QueryPageState extends State<QueryPage>
                       child: const Text("Select All")),
                   TextButton(
                       onPressed: () {
-                        _checkMarkMap.forEach((key, _) {
+                        uploaderMap.forEach((key, value) {
                           setState(() {
-                            _checkMarkMap[key] = false;
-                            dropdownMenuLabel = _checkMarkMap.values
-                                .where((value) => value)
+                            value.isSelected = false;
+                            dropdownMenuLabel = uploaderMap.values
+                                .where((value) => value.isSelected)
                                 .length
                                 .toString();
                             _uploaderController.text =
@@ -232,11 +260,11 @@ class _QueryPageState extends State<QueryPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.15,
+                    width: MediaQuery.of(context).size.width * 0.1,
                     child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Text in Filename: '),
+                        Text('Text in Filename:'),
                       ],
                     ),
                   ),
@@ -260,11 +288,11 @@ class _QueryPageState extends State<QueryPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.2,
+                      width: MediaQuery.of(context).size.width * 0.1,
                       child: const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Uploaded After: '),
+                          Text('Uploaded After:'),
                         ],
                       ),
                     ),
@@ -311,7 +339,7 @@ class _QueryPageState extends State<QueryPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.2,
+                    width: MediaQuery.of(context).size.width * 0.1,
                     child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -347,7 +375,8 @@ class _QueryPageState extends State<QueryPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.2,
+                      height: 50.0,
+                      width: 200.0,
                       child: RadioListTile(
                           title: const Text("File Search"),
                           value: 0,
@@ -359,7 +388,8 @@ class _QueryPageState extends State<QueryPage>
                           }),
                     ),
                     SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.2,
+                      height: 50.0,
+                      width: 200.0,
                       child: RadioListTile(
                           title: const Text("File Count"),
                           value: 1,
@@ -391,6 +421,21 @@ class _QueryPageState extends State<QueryPage>
                         _textSearchController.clear();
                         _createdAfterController.clear();
                         _createdBeforeController.clear();
+                        uploaderMap.forEach(
+                          (key, value) {
+                            setState(() {
+                              value.isSelected = true;
+                            });
+                          },
+                        );
+                        uploaderMap.forEach((key, _) {
+                          dropdownMenuLabel = uploaderMap.values
+                              .where((value) => value.isSelected)
+                              .length
+                              .toString();
+                          _uploaderController.text =
+                              "Number of Users Selected: $dropdownMenuLabel";
+                        });
                       }),
                   child: const Text("Reset")),
             ],
@@ -425,21 +470,21 @@ class _QueryPageState extends State<QueryPage>
         _loading = true;
       });
 
-      List<String> queryUsers = [];
-      _checkMarkMap.forEach((key, value) {
-        if (value == true) {
-          if (key < _dropMenuList.length) {
-            queryUsers.add(_dropMenuList[key].value.toString());
-          }
+      List<String> selectedUploaders = [];
+
+      uploaderMap.forEach((key, value) {
+        if (value.isSelected) {
+          selectedUploaders.add(value.name);
         }
       });
 
       Map<String, dynamic> queryFilters = {
-        'uploaders': queryUsers.isNotEmpty
-            ? queryUsers.toString().replaceFirst('[', '{').replaceFirstMapped(
-                RegExp(r'\]'),
-                (match) => '}',
-                queryUsers.toString().lastIndexOf(']'))
+        'uploaders': selectedUploaders.isNotEmpty
+            ? selectedUploaders
+                .toString()
+                .replaceFirst('[', '{')
+                .replaceFirstMapped(RegExp(r'\]'), (match) => '}',
+                    selectedUploaders.toString().lastIndexOf(']'))
             : '{}',
         'text': text.isNotEmpty ? text : '',
         "after": after.isNotEmpty ? after : '',
@@ -447,10 +492,14 @@ class _QueryPageState extends State<QueryPage>
       };
 
       if (mounted) {
-        var results = await handler.queryDb(context, queryFilters);
+        List<dynamic>? results;
+        if (_radioValue == 0) {
+          results = await handler.queryDb(context, queryFilters);
+        } else if (_radioValue == 1) {
+          results = await handler.queryDbFileCount(context, queryFilters);
+        }
+
         if (mounted) {
-          print("RESULTS");
-          print(results.toString());
           Navigator.push(
               context,
               MaterialPageRoute(
@@ -465,4 +514,12 @@ class _QueryPageState extends State<QueryPage>
       });
     }
   }
+}
+
+class UploaderListItem {
+  String name;
+
+  bool isSelected;
+
+  UploaderListItem(this.name, this.isSelected);
 }

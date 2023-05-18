@@ -95,7 +95,6 @@ class _QueryResultsState extends State<QueryResults> {
 
   @override
   void initState() {
-    print(widget.queryInfo.toString());
     setState(() {
       _loading = true;
     });
