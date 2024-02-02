@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:scantrack/pages/password_reset_page.dart';
 import 'package:scantrack/pages/signup_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
@@ -83,11 +84,13 @@ class _LoginPageState extends State<LoginPage> {
           TextFormField(
             controller: _emailController,
             decoration: const InputDecoration(labelText: 'Email'),
+            onFieldSubmitted: (_) => _signIn(),
           ),
           TextFormField(
             controller: _passwordController,
             decoration: const InputDecoration(labelText: 'Password'),
             obscureText: true,
+            onFieldSubmitted: (_) => _signIn(),
           ),
           const SizedBox(height: 18),
           ElevatedButton(
@@ -103,7 +106,17 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 );
               },
-              child: const Text('Create Account'))
+              child: const Text('Create Account')),
+          const SizedBox(height: 9),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const PasswordReset(),
+                  ),
+                );
+              },
+              child: const Text('Forget Password?'))
         ],
       ),
     );

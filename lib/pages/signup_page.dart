@@ -13,8 +13,10 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   bool _isLoading = false;
   bool _redirecting = false;
+  bool _isPasswordMatched = false;
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
+  late final TextEditingController _confirmPasswordController;
 
   late final StreamSubscription<AuthState> _authStateSubscription;
 
@@ -35,6 +37,7 @@ class _SignupPageState extends State<SignupPage> {
       final User? user = res.user;
       if (mounted) {
         _passwordController.clear();
+        _confirmPasswordController.clear();
         _emailController.clear();
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
@@ -56,10 +59,21 @@ class _SignupPageState extends State<SignupPage> {
     });
   }
 
+  void _validatePassword() {
+    setState(() {
+      _isPasswordMatched =
+          _passwordController.text == _confirmPasswordController.text &&
+              _passwordController.text.isNotEmpty;
+    });
+  }
+
   @override
   void initState() {
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+    _passwordController.addListener(_validatePassword);
+    _confirmPasswordController.addListener(_validatePassword);
     _authStateSubscription = supabase.auth.onAuthStateChange.listen((data) {
       if (_redirecting) return;
       final session = data.session;
@@ -75,6 +89,7 @@ class _SignupPageState extends State<SignupPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _authStateSubscription.cancel();
     super.dispose();
   }
@@ -98,9 +113,23 @@ class _SignupPageState extends State<SignupPage> {
             decoration: const InputDecoration(labelText: 'Password'),
             obscureText: true,
           ),
+          TextFormField(
+            controller: _confirmPasswordController,
+            decoration: const InputDecoration(labelText: 'Confirm Password'),
+            obscureText: true,
+          ),
+          Visibility(
+            visible: !_isPasswordMatched &&
+                _passwordController.text.isNotEmpty &&
+                _confirmPasswordController.text.isNotEmpty,
+            child: const Text(
+              'Passwords must match',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
           const SizedBox(height: 18),
           ElevatedButton(
-            onPressed: _isLoading ? null : _signUp,
+            onPressed: _isPasswordMatched && !_isLoading ? _signUp : null,
             child: Text(_isLoading ? 'Loading' : 'Submit'),
           ),
         ],
